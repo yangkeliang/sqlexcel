@@ -19,27 +19,31 @@ import xlrd
 import pymysql as psql
 
 class Sqlandex:
-    def __init__(self,host,user,password,db_name):#初始化读入数据库基本的信息，包括ip地址，用户名，密码，数据库名
+    def __init__(self,host,user,password,db_name):
+        '''初始化读入数据库基本的信息，参数包括ip地址，用户名，密码，数据库名'''
         self.host = host
         self.user = user
         self.password = password
         self.db_name = db_name
 
-    def query(self,sql):#查询函数，输入查询语句
+    def query(self,sql):
+        '''查询函数，参数为输入的查询语句'''
         db = psql.connect(host=self.host, user=self.user, password=self.password, db=self.db_name)#pymysqlconnect方法
         cur = db.cursor()
         cur.execute(sql)
         res = cur.fetchall()
         return res
 
-    def get_titlelist(self,sql_title):#从数据库中获取表头，输入查询表头的sql语句
+    def get_titlelist(self,sql_title):
+        '''从数据库中获取表头，参数为查询表头的sql语句'''
         list_title = []
         title = Sqlandex(self.host,self.user,self.password,self.db_name)
         for i in title.query(sql_title):
             list_title.append(i[0])
         return list_title
 
-    def get_contentlist(self,sql_content):#从数据库中获取内容，输入查询内容的sql语句
+    def get_contentlist(self,sql_content):
+        '''从数据库中获取内容，参数为查询内容的sql语句'''
         list_content = []
         content = Sqlandex(self.host,self.user,self.password,self.db_name)
         for i in content.query(sql_content):
@@ -49,7 +53,8 @@ class Sqlandex:
             list_content.append(list_each)
         return list_content
 
-    def write_to_excel(self,list_all,sheet_name):#将获取的数据写入excel表格
+    def write_to_excel(self,list_all,sheet_name):
+        '''将获取的数据写入excel表格，参数为所有的list列表，表单名'''
         wb = xlwt.Workbook()
         ws = wb.add_sheet(sheet_name)
         for i in range(len(list_all)):
@@ -57,7 +62,8 @@ class Sqlandex:
                 ws.write(i,j,list_all[i][j])
         wb.save("./sqlexcel/{}.xls".format(sheet_name))
 
-    def s_to_e(self,sheet_name,lines):#数据库数据导入表格
+    def s_to_e(self,sheet_name,lines):
+        '''数据库数据导入表格，参数为表单名，需要写入的行数'''
         sql_title = "SELECT COLUMN_NAME FROM \
             information_schema.COLUMNS\
                 WHERE TABLE_SCHEMA = '{}' \
@@ -70,13 +76,15 @@ class Sqlandex:
         list_all.extend(content.get_contentlist(sql_content))
         title.write_to_excel(list_all,sheet_name)
 
-    def change(self,sqlchange):#写入数据库
+    def change(self,sqlchange):
+        '''写入数据库，参数为DML'''
         db = psql.connect(host=self.host, user=self.user, password=self.password, db=self.db_name)#查询
         cur = db.cursor()
         cur.execute(sqlchange)
         db.commit()
-        
-    def e_to_s(self,wb_name,sheet_name):#表格写入数据库
+
+    def e_to_s(self,wb_name,sheet_name):
+        '''表格写入数据库，参数为工作表名，表单名'''
         wb = xlrd.open_workbook(wb_name)
         ws = wb.sheet_by_name(sheet_name)
         title_list = ws.row_values(0)
@@ -112,4 +120,5 @@ if __name__ == "__main__":
     con = Sqlandex(host,user,password,db_name)
     con.s_to_e("t_user",30)#测试数据库导出功能
     con.e_to_s(r"sqlexcel\2.xls","学生表")#测试数据库导入功能
+    
     
